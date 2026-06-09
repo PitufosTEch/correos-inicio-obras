@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Correos de Inicio de Obras — Raíces / ATPK / Atipika</title>
+<style>
+  :root{
+    --verde:#2e7d4f; --verde-osc:#1f5a37; --verde-claro:#e8f3ec;
+    --gris:#5b6770; --gris-claro:#f4f6f7; --borde:#d9dee2;
+    --rojo:#c0392b; --rojo-bg:#fdecea; --amarillo:#f6c343;
+    --texto:#1f2a30; --blanco:#fff; --sombra:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--texto);background:var(--gris-claro);line-height:1.5;font-size:15px;}
+  header.app{background:var(--verde);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;
+    position:sticky;top:0;z-index:50;box-shadow:var(--sombra);}
+  header.app h1{font-size:16px;margin:0;font-weight:600;flex:0 0 auto;}
+  header.app .obra-actual{font-size:14px;opacity:.95;flex:1;font-weight:500;}
+  header.app .obra-actual b{font-weight:700;}
+  header.app button.icono{background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;
+    padding:8px 12px;border-radius:6px;font-size:14px;}
+  header.app button.icono:hover{background:rgba(255,255,255,.28);}
+  main{max-width:920px;margin:0 auto;padding:20px;}
+  .card{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:22px;box-shadow:var(--sombra);margin-bottom:18px;}
+  h2{font-size:20px;margin:0 0 4px;} h3{font-size:16px;margin:22px 0 10px;color:var(--verde-osc);}
+  .sub{color:var(--gris);font-size:14px;margin:0 0 18px;}
+  label{display:block;font-weight:600;font-size:13px;margin:14px 0 4px;}
+  input[type=text],input[type=date],input[type=number],input[type=url],input[type=email],select,textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--borde);border-radius:7px;font-size:14px;font-family:inherit;background:#fff;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-claro);}
+  textarea{resize:vertical;min-height:70px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;} .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 18px;}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}}
+  .btn{display:inline-flex;align-items:center;gap:7px;background:var(--verde);color:#fff;border:none;cursor:pointer;
+    padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;}
+  .btn:hover{background:var(--verde-osc);} .btn.sec{background:#fff;color:var(--verde-osc);border:1.5px solid var(--verde);}
+  .btn.sec:hover{background:var(--verde-claro);} .btn.gris{background:#fff;color:var(--gris);border:1.5px solid var(--borde);}
+  .btn.gris:hover{background:var(--gris-claro);} .btn.peligro{background:#fff;color:var(--rojo);border:1.5px solid var(--rojo);}
+  .btn.peligro:hover{background:var(--rojo-bg);} .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.sm{padding:6px 12px;font-size:13px;}
+  /* progreso */
+  .pasos{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+  .pasos button{border:1px solid var(--borde);background:#fff;color:var(--gris);border-radius:20px;padding:6px 13px;
+    font-size:12.5px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .pasos button.activo{background:var(--verde);color:#fff;border-color:var(--verde);font-weight:600;}
+  .pasos button.hecho{border-color:var(--verde);color:var(--verde-osc);}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:12px;}
+  .pendientes-chip{cursor:pointer;font-size:13px;border-radius:20px;padding:5px 13px;border:1px solid var(--borde);background:#fff;}
+  .pendientes-chip .rojo{color:var(--rojo);font-weight:700;} .pendientes-chip .gris{color:var(--gris);font-weight:700;}
+  /* anexas */
+  .tarjeta-anexa{border:1px solid var(--borde);border-radius:10px;padding:16px;margin-bottom:14px;background:#fcfdfd;}
+  .tarjeta-anexa .preg{font-weight:600;margin-bottom:10px;font-size:15px;}
+  .opts{display:flex;gap:8px;flex-wrap:wrap;}
+  .opts button{border:1.5px solid var(--borde);background:#fff;border-radius:8px;padding:8px 18px;cursor:pointer;
+    font-size:14px;font-weight:600;font-family:inherit;color:var(--gris);}
+  .opts button.si.on{background:var(--verde);color:#fff;border-color:var(--verde);}
+  .opts button.no.on{background:var(--gris);color:#fff;border-color:var(--gris);}
+  .opts button.na.on{background:#8794a0;color:#fff;border-color:#8794a0;}
+  .anexa-detalle{margin-top:12px;}
+  .placeholder-ej{font-size:12.5px;color:var(--gris);background:var(--verde-claro);border-left:3px solid var(--verde);
+    padding:8px 10px;border-radius:0 6px 6px 0;margin-top:8px;}
+  .placeholder-ej b{color:var(--verde-osc);}
+  /* fijas */
+  .fija{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--borde);}
+  .fija:last-child{border-bottom:none;} .fija input[type=checkbox]{margin-top:4px;width:17px;height:17px;flex:0 0 auto;accent-color:var(--verde);}
+  .fija label{margin:0;font-weight:400;font-size:14px;cursor:pointer;}
+  /* preview */
+  pre.preview{white-space:pre-wrap;word-wrap:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13px;background:#fbfcfc;border:1px solid var(--borde);border-radius:8px;padding:16px;line-height:1.55;}
+  pre.preview .pend{color:var(--rojo);background:var(--rojo-bg);font-weight:700;border-radius:3px;padding:0 2px;}
+  .bloque-copia{border:1px solid var(--borde);border-radius:8px;margin-bottom:14px;overflow:hidden;}
+  .bloque-copia .bc-head{display:flex;justify-content:space-between;align-items:center;background:var(--gris-claro);
+    padding:8px 12px;font-weight:600;font-size:13px;border-bottom:1px solid var(--borde);}
+  .bloque-copia .bc-body{padding:12px;}
+  .asunto-prev{background:var(--verde-claro);border:1px solid var(--verde);border-radius:7px;padding:10px 12px;font-size:13.5px;margin-top:8px;}
+  /* config */
+  .tabs{display:flex;gap:4px;border-bottom:2px solid var(--borde);margin-bottom:18px;}
+  .tabs button{border:none;background:none;padding:10px 16px;cursor:pointer;font-size:14px;font-weight:600;color:var(--gris);
+    border-bottom:3px solid transparent;margin-bottom:-2px;font-family:inherit;}
+  .tabs button.on{color:var(--verde-osc);border-bottom-color:var(--verde);}
+  .area-grupo{border:1px solid var(--borde);border-radius:8px;margin-bottom:14px;overflow:hidden;}
+  .area-grupo>.ag-head{background:var(--verde-claro);padding:10px 14px;font-weight:700;color:var(--verde-osc);
+    display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .tem-fila{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-top:1px solid var(--borde);}
+  .tem-fila .badge{font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;flex:0 0 auto;margin-top:2px;}
+  .badge.fija{background:#e3f0ff;color:#1b5fb0;} .badge.anexa{background:#fff2d9;color:#a76b00;}
+  .tem-fila .tem-txt{flex:1;font-size:13.5px;} .tem-fila.inactiva{opacity:.5;}
+  .tem-fila .acc{display:flex;gap:5px;flex:0 0 auto;align-items:center;}
+  .switch{position:relative;display:inline-block;width:38px;height:21px;flex:0 0 auto;}
+  .switch input{opacity:0;width:0;height:0;} .slider{position:absolute;cursor:pointer;inset:0;background:#bbb;border-radius:21px;transition:.2s;}
+  .slider:before{content:"";position:absolute;height:15px;width:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+  input:checked+.slider{background:var(--verde);} input:checked+.slider:before{transform:translateX(17px);}
+  .iconbtn{border:1px solid var(--borde);background:#fff;border-radius:6px;cursor:pointer;width:30px;height:30px;font-size:14px;
+    display:inline-flex;align-items:center;justify-content:center;}
+  .iconbtn:hover{background:var(--gris-claro);} .iconbtn.del:hover{background:var(--rojo-bg);border-color:var(--rojo);color:var(--rojo);}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--verde-osc);color:#fff;
+    padding:11px 20px;border-radius:8px;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25);opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:200;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+  .inicio-acc{display:flex;flex-direction:column;gap:12px;max-width:380px;margin:22px auto;}
+  .inicio-acc .btn{justify-content:center;padding:14px;font-size:15px;}
+  .email-invalido{color:var(--rojo);font-size:12px;margin-top:4px;}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:150;padding:20px;}
+  .modal{background:#fff;border-radius:12px;padding:22px;max-width:520px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+  .modal h3{margin-top:0;} .modal-acc{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+  .hint{font-size:12.5px;color:var(--gris);margin-top:3px;}
+  .resumen-pend{background:var(--rojo-bg);border:1px solid var(--rojo);border-radius:8px;padding:12px 14px;margin-bottom:16px;}
+  .resumen-pend a{color:var(--rojo);font-weight:600;cursor:pointer;text-decoration:underline;}
+</style>
+</head>
+<body>
+<header class="app">
+  <h1>📋 Inicio de Obras</h1>
+  <div class="obra-actual" id="headerObra"></div>
+  <button class="icono" id="btnHomeHeader" title="Inicio">🏠</button>
+  <button class="icono" id="btnConfigHeader" title="Configuración">⚙ Configuración</button>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================= *
+ *  Generador de Correos de Inicio de Obras
+ *  App single-file · vanilla JS · persistencia localStorage
+ * ============================================================= */
+
+const K_CONFIG = "iniciObras_config";
+const K_BORRADOR = "iniciObras_borrador";
+
+/* ----------------------- SEED (sección 8) ---------------------- */
+function baseDestinatarios(dominioRrhh){
+  return [
+    "cespinoza@scraices.cl","aespinoza@scraices.cl","mabuid@scraices.cl",
+    "rlagos@scraices.cl","autocontrol@scraices.cl","amartinez@scraices.cl",
+    "mguinez@scraices.cl","csaravia@scraices.cl","vnahuel@scraices.cl",
+    "vecheverria@scraices.cl","adquisiciones@scraices.cl","ebodega@scraices.cl",
+    "Nbascur@scraices.cl","nmunoz@scraices.cl", dominioRrhh,
+    "prevencion@scraices.cl"
+  ];
+}
+
+function defaultConfig(){
+  let oid = 0; const tid = () => "t"+(++oid);
+  const T = (areaId, tipo, payload, orden) => Object.assign(
+    { id: tid(), areaId, tipo, activa:true, orden }, payload);
+  let o = 0;
+  const tematicas = [
+    /* ---- Autocontrol / Residente ---- */
+    T("autocontrol","fija",{texto:"Construcción de planilla de m³ para revisión y envío a FTO. Confirmar que ha sido derivada."},++o),
+    T("autocontrol","fija",{texto:"Levantar requerimientos especiales de materiales, herramientas u otros."},++o),
+    T("autocontrol","fija",{texto:"Planilla de MO: se considera trabajar con cuadrillas propias; en caso de eventual subcontrato, confirmar cómo se procederá en el pago y solicitar contrato de subcontrato y seguimiento de responsabilidades según normativa y formato, con especial cuidado en calidad."},++o),
+    T("autocontrol","fija",{texto:"Actualizar pre-levantamientos y comentarios en la App para requerir habilitaciones, cumpliendo procedimientos de revisión y registro (rutas, emplazamientos, observaciones técnicas)."},++o),
+    T("autocontrol","fija",{texto:"Establecer calendario inmediato de toma de muestras de hormigones."},++o),
+    T("autocontrol","fija",{texto:"Actualizar libro de obras en relación con homologaciones y cambios relevantes del proyecto."},++o),
+    T("autocontrol","anexa",{pregunta:"¿Hay temas eléctricos críticos (presupuestos vs factibilidades, empalmes, normativa nueva)?",placeholder:"CRÍTICO: Verificar de forma detallada los presupuestos eléctricos y factibilidades, contrastando ambas informaciones antes de solicitar habilitaciones de terreno. Coordinar visitas con [instalador] para evaluación de conectividad. Aplica normativa eléctrica nueva."},++o),
+    T("autocontrol","anexa",{pregunta:"¿Hay cambios de estructura/prefabricación que el residente deba dominar?",placeholder:"Énfasis en cambio de estructura de bodega a acero, prefabricación en planta. Cambio de receta cuando se envíe ficha de paneles para creación de códigos Manager. Aclarar dudas constructivas de piloto casa+bodega."},++o),
+    T("autocontrol","anexa",{pregunta:"¿Hay pre-verificaciones pendientes de terminar?",placeholder:"Terminar levantamiento de pre-verificación para revisión."},++o),
+    /* ---- EGR – Legal ---- */
+    T("egr","fija",{texto:"Seguimiento de inscripción de prohibiciones y toma de firmas (informar casos pendientes)."},++o),
+    T("egr","fija",{texto:"Subida de comentarios relevantes a la App. Todo comentario debe quedar con respuesta, subsanación o continuidad de gestiones."},++o),
+    T("egr","fija",{texto:"Subir DJ firmadas."},++o),
+    T("egr","anexa",{pregunta:"¿Hay casos legales o beneficiarios críticos a individualizar?",placeholder:"Revisar comentarios legales y casos críticos a resolver: [nombres], casos con subdivisiones; dejar puntos aclarados en actas de entrega de terreno."},++o),
+    T("egr","anexa",{pregunta:"¿Corresponde calendarizar entregas individuales de terreno?",placeholder:"Calendarizar entregas individuales según viviendas que cuentan con observaciones de pre-verificación subsanadas."},++o),
+    T("egr","anexa",{pregunta:"¿Está pendiente la reunión de selección de color y cerámica con el grupo?",placeholder:"Reunión de selección de color y cerámica. URGENTE."},++o),
+    /* ---- Área Proyectos / Residente ---- */
+    T("proyectos","fija",{texto:"Actualización de planimetría en Drive (planos homologados)."},++o),
+    T("proyectos","fija",{texto:"Actualización de información técnica en la App."},++o),
+    T("proyectos","fija",{texto:"Revisión de tipologías contra la calificación definitiva de los proyectos."},++o),
+    T("proyectos","fija",{texto:"Cumplimiento de checklist de obras según hitos mínimos (instalación de letreros, cronogramas derivados a SERVIU, actualización de libro de obras)."},++o),
+    T("proyectos","fija",{texto:"Aclaraciones sobre pernos de anclaje, proyecto eléctrico, hojalatería y otras observaciones técnicas; las anotaciones deben quedar en el libro de obras."},++o),
+    T("proyectos","anexa",{pregunta:"¿Hay factibilidades por actualizar (APR, eléctricas)?",placeholder:"Actualización de factibilidades de agua en APR y eléctricas; verificar en factibilidades la ubicación física del poste de conexión versus presupuesto. Actualizar resoluciones de APR del SS pendientes."},++o),
+    T("proyectos","anexa",{pregunta:"¿Hay proyectos de cambio (fachada, estructura de bodega) por entregar?",placeholder:"Entrega de proyectos para cambio de fachada y estructura de bodega."},++o),
+    /* ---- Logística / Despacho ---- */
+    T("logistica","fija",{texto:"Inicio del cronograma de compras basado en recetas, priorizando materiales de fundaciones y de largo período de fabricación (ventanas, bodegas prefabricadas y cubiertas)."},++o),
+    T("logistica","fija",{texto:"Receta definitiva cargada en la App. Una vez subidas, es responsabilidad de los residentes verificar sus recetas e informar ajustes o cambios."},++o),
+    T("logistica","fija",{texto:"Preparar anticipado mediante kit bajo receta (fundaciones, plantas, redes de agua), avanzando compras según cronograma informado."},++o),
+    T("logistica","fija",{texto:"Crear carpeta con certificados de materiales de proveedores."},++o),
+    T("logistica","anexa",{pregunta:"¿Hay cambios de receta, colores u otras decisiones de diseño que informar?",placeholder:"IMPORTANTE: se unificó un solo color de vivienda según fotografía (GRIS OSCURO), revisar ajuste en receta. / Receta definitiva con cambios en fachada, colores y estructura de bodega antes del [fecha]."},++o),
+    T("logistica","anexa",{pregunta:"¿Hay fabricación anticipada en curso (estructuras, bodegas prefabricadas)?",placeholder:"Estructuras de acero: 10 fabricadas. Bodegas se trabajarán prefabricadas en Planta Raíces, modelo 16 m²; código nuevo en Manager debe crearse por panel (confirmación de planta)."},++o),
+    T("logistica","anexa",{pregunta:"¿Hay cotizaciones u OC específicas que gatillar de inmediato?",placeholder:"Generar cotizaciones y OC para [proveedor] por viviendas modelos [tipologías]."},++o),
+    /* ---- Administración / RRHH / Prevención ---- */
+    T("admin","fija",{texto:"Establecer el grupo F-30 y las geocercas para Surtrack del personal en terreno."},++o),
+    T("admin","fija",{texto:"Generar capacitaciones, inducciones y entrega de implementos y vehículos según lo requerido."},++o),
+    T("admin","fija",{texto:"Crear la obra como centro de costo en REX+."},++o),
+    T("admin","fija",{texto:"Crear centros de trabajo para informes de RRHH y Prevención de Riesgos."},++o),
+    T("admin","fija",{texto:"Preparar y entregar el archivador administrativo para seguimiento."},++o),
+    T("admin","fija",{texto:"Actualización de contratos con anexos por obra nueva; el residente debe informar movimientos de personal."},++o),
+    T("admin","fija",{texto:"Entrega de formatos de subcontrato (en caso de corresponder) y procedimiento de subcontratistas al residente de obras."},++o),
+    T("admin","fija",{texto:"Revisar seguros asociados a la obra y entregar a EGR."},++o),
+    T("admin","anexa",{pregunta:"¿Hay campañas o verificaciones puntuales de Prevención/RRHH?",placeholder:"VERIFICAR LA ACTUALIZACIÓN DE ENTREGAS DE EPP A CUADRILLAS PARA TRABAJO EN ALTURA."},++o),
+    T("admin","anexa",{pregunta:"¿Se aprovechará la instancia para regularizaciones pendientes?",placeholder:"Aprovechar esta instancia para actualizaciones de contratos pendientes, según actualización de Reglamento Interno y normativos."},++o),
+    /* ---- Consideración Contabilidad ---- */
+    T("contabilidad","anexa",{pregunta:"¿Hay factor de facturación u otra consideración contable que indicar?",placeholder:"Facturación 2025 – 31 de diciembre de 2026: aplica 3,0785%."},++o),
+    T("contabilidad","anexa",{pregunta:"¿La empresa ejecutora es distinta de Raíces (separación de gastos)?",placeholder:"Primera obra de la empresa [ATPK/Atipika]; por ende, contrataciones, suministros y gastos generales deben estar claramente separados."},++o),
+    /* ---- Generales ---- */
+    T("generales","fija",{texto:"Todos los cambios de material, cantidad o tipología deben canalizarse a través de la jefatura directa. Actualizar acuerdos en relación con la estructura del proyecto y dejar anotaciones en comentarios (cambios de presupuestos, presupuestos adicionales individuales)."},++o),
+    T("generales","fija",{texto:"Enviar solicitudes aprobadas de cambios o ajustes a ebodega@scraices.cl y adquisiciones@scraices.cl, con copia a aespinoza@scraices.cl, para su actualización en la App e informar al equipo de adquisiciones y despacho."},++o),
+    T("generales","fija",{texto:"No se aceptarán cambios fuera de este procedimiento, para evitar problemas logísticos y contables."},++o),
+    T("generales","fija",{texto:"Cualquier duda respecto a procesos internos y responsabilidades, aclarar por este medio. Se pide a coordinadores de áreas reforzar los procedimientos, fechas y medios de entrega de información."},++o),
+    T("generales","anexa",{pregunta:"¿Hay pendientes conocidos que condicionan el inicio?",placeholder:"Se reitera que están pendientes procesos importantes como cierre de receta completa para piloto, revisión de [tema], antes del inicio físico."},++o),
+    T("generales","anexa",{pregunta:"¿Hay piloto definido?",placeholder:"Piloto: estructura de acero, casa + bodega. Se inicia por viviendas piloto [nombres/ubicación]."},++o),
+  ];
+  return {
+    version:1,
+    empresas:["Constructora Raíces","ATPK","Atipika"],
+    destinatarios:{
+      "Constructora Raíces": baseDestinatarios("rrhh@scraices.cl"),
+      "ATPK": baseDestinatarios("rrhh@atpk.cl"),
+      "Atipika": baseDestinatarios("rrhh@atipika.cl")
+    },
+    areas:[
+      {id:"autocontrol", nombre:"Autocontrol / Residente"},
+      {id:"egr",         nombre:"EGR – Legal"},
+      {id:"proyectos",   nombre:"Área Proyectos / Residente"},
+      {id:"logistica",   nombre:"Logística / Despacho"},
+      {id:"admin",       nombre:"Administración / RRHH / Prevención de Riesgos"},
+      {id:"contabilidad",nombre:"Consideración Contabilidad"},
+      {id:"generales",   nombre:"Generales"}
+    ],
+    tematicas
+  };
+}
+
+function defaultBorrador(){
+  return {
+    esenciales:{
+      empresa:"", nombreObra:"", comuna:"", codigoManager:"",
+      fechaActaTerreno:"", fechaInicioFisico:"", plazoDias:null,
+      fechaTermino:"", tipologias:"", bodegaRC:"", totalGrupo:"",
+      residente:"", autocontrol:"", capataz:"",
+      asistenteSocial:"", fto:"", sat:"", linkGantt:""
+    },
+    fijasIncluidas:{}, anexas:{}, pasoActual:0
+  };
+}
+
+/* ----------------------- Estado y persistencia ---------------------- */
+let config, borrador;
+let vista = "inicio";        // inicio | wizard | config
+let configTab = "tematicas"; // tematicas | destinatarios | respaldo
+
+function loadConfig(){
+  try{ const r = localStorage.getItem(K_CONFIG); if(r){ const c = JSON.parse(r); if(c && c.version){ return c; } } }catch(e){}
+  const c = defaultConfig(); saveConfig(c); return c;
+}
+function saveConfig(c){ config = c||config; localStorage.setItem(K_CONFIG, JSON.stringify(config)); }
+function loadBorrador(){
+  try{ const r = localStorage.getItem(K_BORRADOR); if(r){ return Object.assign(defaultBorrador(), JSON.parse(r)); } }catch(e){}
+  return defaultBorrador();
+}
+function saveBorrador(){ localStorage.setItem(K_BORRADOR, JSON.stringify(borrador)); }
+function hayBorrador(){ return !!localStorage.getItem(K_BORRADOR); }
+
+/* ----------------------- Utilidades ---------------------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function fmtFecha(iso){ if(!iso) return ""; const p=iso.split("-"); if(p.length!==3) return iso; return `${p[2]}-${p[1]}-${p[0]}`; }
+function addDias(iso, dias){
+  if(!iso || dias==null || dias==="") return "";
+  const p=iso.split("-"); if(p.length!==3) return "";
+  const d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])); d.setUTCDate(d.getUTCDate()+Number(dias));
+  const yy=d.getUTCFullYear(), mm=String(d.getUTCMonth()+1).padStart(2,"0"), dd=String(d.getUTCDate()).padStart(2,"0");
+  return `${yy}-${mm}-${dd}`;
+}
+function emailValido(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); }
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1800); }
+function uid(){ return "t"+Math.random().toString(36).slice(2,9); }
+
+/* ----------------------- Pasos del wizard ---------------------- */
+function stepDefs(){
+  const base=[
+    {key:"identificacion",title:"Identificación"},
+    {key:"fechas",title:"Fechas"},
+    {key:"alcance",title:"Alcance"},
+    {key:"responsables",title:"Responsables"},
+    {key:"cronograma",title:"Cronograma"},
+  ];
+  const areas=config.areas.map(a=>({key:"area:"+a.id,title:a.nombre,areaId:a.id}));
+  return base.concat(areas, [{key:"revision",title:"Revisión"}]);
+}
+
+/* etiquetas de campos esenciales para [PENDIENTE: ...] */
+const LBL={
+  nombreObra:"Nombre de la obra", comuna:"Comuna", codigoManager:"Código Manager",
+  fechaActaTerreno:"Fecha acta de terreno", fechaInicioFisico:"Fecha inicio físico",
+  plazoDias:"Plazo en días", fechaTermino:"Fecha de término",
+  tipologias:"Tipologías", bodegaRC:"Bodega/RC", totalGrupo:"Total del grupo",
+  residente:"Residente", autocontrol:"Autocontrol", capataz:"Capataz en terreno",
+  asistenteSocial:"Asistente Social", fto:"FTO", sat:"SAT", linkGantt:"Link Carta Gantt"
+};
+/* campos esenciales que cuentan como pendientes rojos */
+const ESENCIALES_PEND=["nombreObra","comuna","codigoManager","fechaActaTerreno","fechaInicioFisico","plazoDias","tipologias","bodegaRC","totalGrupo"];
+
+function vacio(campo){ const v=borrador.esenciales[campo]; return v==null || String(v).trim()===""; }
+function pendientesEsenciales(){ return ESENCIALES_PEND.filter(vacio); }
+function pendientesAnexas(){
+  let n=0;
+  config.tematicas.forEach(t=>{ if(t.tipo==="anexa" && t.activa){ const a=borrador.anexas[t.id]; if(!a || a.respuesta==null) n++; } });
+  return n;
+}
+
+/* ----------------------- Generación del correo ---------------------- */
+function P(campo){ // valor o token pendiente
+  if(vacio(campo)) return `[PENDIENTE: ${LBL[campo]}]`;
+  return String(borrador.esenciales[campo]).trim();
+}
+function fechaTerminoEfectiva(){
+  const e=borrador.esenciales;
+  if(e.fechaTermino) return fmtFecha(e.fechaTermino);
+  const calc=addDias(e.fechaInicioFisico, e.plazoDias);
+  return calc?fmtFecha(calc):`[PENDIENTE: ${LBL.fechaTermino}]`;
+}
+function generarAsunto(){
+  const nombre = vacio("nombreObra") ? `[PENDIENTE: ${LBL.nombreObra}]` : String(borrador.esenciales.nombreObra).toUpperCase();
+  const comuna = P("comuna");
+  const cod = P("codigoManager");
+  const fi = vacio("fechaInicioFisico") ? `[PENDIENTE: ${LBL.fechaInicioFisico}]` : fmtFecha(borrador.esenciales.fechaInicioFisico);
+  return `INICIO OBRA ${nombre} – ${comuna} / Código Manager: ${cod} / Fecha Inicio: ${fi} / TODOS LEER COMPLETO`;
+}
+function generarDestinatarios(){
+  const emp=borrador.esenciales.empresa;
+  const lista=(config.destinatarios[emp]||[]).filter(x=>x && x.trim());
+  return lista.join(", ");
+}
+function generarCuerpo(){
+  const e=borrador.esenciales;
+  const nombre = vacio("nombreObra") ? `[PENDIENTE: ${LBL.nombreObra}]` : e.nombreObra.trim();
+  const fActa = vacio("fechaActaTerreno") ? `[PENDIENTE: ${LBL.fechaActaTerreno}]` : fmtFecha(e.fechaActaTerreno);
+  const fIni  = vacio("fechaInicioFisico") ? `[PENDIENTE: ${LBL.fechaInicioFisico}]` : fmtFecha(e.fechaInicioFisico);
+  const L=[];
+  L.push("Estimados,","");
+  L.push(`En relación con el inicio de la obra ${nombre}, Código Manager: ${P("codigoManager")}, se informa lo siguiente:`,"");
+  L.push(`- Fecha de inicio: Acta de entrega de terreno: ${fActa}; INICIO OBRAS: ${fIni} (corresponde a la fecha de inicio físico de la obra).`);
+  L.push(`- Plazo de ejecución: ${P("plazoDias")} días, fecha de término ${fechaTerminoEfectiva()}.`);
+  L.push(`- Tipología: ${P("tipologias")}. Bodega: ${P("bodegaRC")}.`);
+  L.push(`- Total grupo: ${P("totalGrupo")}.`);
+  L.push(`- Cronograma: se adjunta cronograma de inicio interno y plan de trabajo. Debe ser revisado por todas las áreas para ajustar sus funciones a esta planificación.`);
+  L.push(`  ${P("linkGantt")}`);
+  L.push("");
+  L.push("Responsables:");
+  L.push(`- Residente de obra: ${P("residente")}`);
+  L.push(`- Autocontrol: ${P("autocontrol")}`);
+  L.push(`- Capataz en terreno: ${P("capataz")}`);
+  L.push(`- Asistente Social: ${P("asistenteSocial")}`);
+  L.push(`- FTO: ${P("fto")}`);
+  L.push(`- SAT: ${P("sat")}`);
+  L.push("");
+  L.push("Lineamientos de trabajo:","");
+
+  config.areas.forEach(area=>{
+    const fijas=config.tematicas.filter(t=>t.areaId===area.id&&t.tipo==="fija"&&t.activa)
+      .sort((a,b)=>a.orden-b.orden)
+      .filter(t=>borrador.fijasIncluidas[t.id]!==false);
+    const anexasSi=config.tematicas.filter(t=>t.areaId===area.id&&t.tipo==="anexa"&&t.activa)
+      .sort((a,b)=>a.orden-b.orden)
+      .filter(t=>{ const a=borrador.anexas[t.id]; return a&&a.respuesta==="si"&&a.detalle&&a.detalle.trim(); });
+    if(fijas.length===0 && anexasSi.length===0) return; // se omite el área
+    L.push(`${area.nombre}:`);
+    fijas.forEach(t=>L.push(`- ${t.texto}`));
+    anexasSi.forEach(t=>L.push(`- ${borrador.anexas[t.id].detalle.trim()}`));
+    L.push("");
+  });
+
+  L.push("Quedo atento a cualquier comentario o rectificación a la información entregada. Se solicita acusar recibo.","");
+  L.push("Saludos,","Alfredo Espinoza","Coordinador de Obras");
+  return L.join("\n");
+}
+function previewHTML(texto){
+  return esc(texto).replace(/\[PENDIENTE:[^\]]*\]/g, m=>`<span class="pend">${m}</span>`);
+}
+
+/* ----------------------- Copiar al portapapeles ---------------------- */
+async function copiar(texto, etiqueta){
+  try{ await navigator.clipboard.writeText(texto); toast((etiqueta||"Texto")+" copiado ✓"); }
+  catch(e){
+    const ta=document.createElement("textarea"); ta.value=texto; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand("copy"); toast((etiqueta||"Texto")+" copiado ✓"); }catch(_){ toast("No se pudo copiar"); }
+    document.body.removeChild(ta);
+  }
+}
+
+/* ============================================================= *
+ *  RENDER
+ * ============================================================= */
+const app=()=>document.getElementById("app");
+
+function render(){
+  actualizarHeader();
+  if(vista==="inicio") return renderInicio();
+  if(vista==="config") return renderConfig();
+  return renderWizard();
+}
+function actualizarHeader(){
+  const h=document.getElementById("headerObra");
+  const n=borrador.esenciales.nombreObra;
+  h.innerHTML = (vista==="wizard" && n) ? `Obra en curso: <b>${esc(n)}</b>` : "";
+}
+
+/* ---------- Paso 0 — Inicio ---------- */
+function renderInicio(){
+  app().innerHTML=`
+  <div class="card">
+    <h2>Generador de Correos de Inicio de Obras</h2>
+    <p class="sub">Constructora Raíces · ATPK · Atipika — Asistente paso a paso para redactar el correo de inicio de obra.</p>
+    <div class="inicio-acc">
+      <button class="btn" id="iNueva">＋ Nueva obra</button>
+      <button class="btn sec" id="iCont" ${hayBorrador()?"":"disabled"}>↻ Continuar borrador</button>
+      <button class="btn gris" id="iConf">⚙ Configuración</button>
+    </div>
+    ${hayBorrador()?`<p class="hint" style="text-align:center">Hay un borrador guardado${borrador.esenciales.nombreObra?`: <b>${esc(borrador.esenciales.nombreObra)}</b>`:""}.</p>`:""}
+  </div>`;
+  document.getElementById("iNueva").onclick=()=>{
+    if(hayBorrador() && !confirm("¿Iniciar una obra nueva? Se borrará el borrador actual.")) return;
+    borrador=defaultBorrador(); saveBorrador(); vista="wizard"; render();
+  };
+  document.getElementById("iCont").onclick=()=>{ vista="wizard"; render(); };
+  document.getElementById("iConf").onclick=()=>{ vista="config"; render(); };
+}
+
+/* ---------- Barra de pasos + navegación ---------- */
+function barraPasos(){
+  const steps=stepDefs(); const cur=borrador.pasoActual;
+  const pe=pendientesEsenciales().length, pa=pendientesAnexas();
+  const chips=steps.map((s,i)=>`<button class="${i===cur?"activo":""}" data-goto="${i}">${i+1}. ${esc(s.title)}</button>`).join("");
+  const chipPend=`<button class="pendientes-chip" id="chipPend" title="Ver pendientes">
+      <span class="rojo">${pe}</span> esenciales · <span class="gris">${pa}</span> anexas</button>`;
+  return `<div class="pasos">${chips}</div><div style="margin-bottom:14px">${chipPend}</div>`;
+}
+function navInferior(){
+  const steps=stepDefs(); const cur=borrador.pasoActual;
+  return `<div class="nav">
+    <button class="btn gris" id="navPrev" ${cur===0?"disabled":""}>« Atrás</button>
+    <button class="btn gris sm" id="navHome">🏠 Inicio</button>
+    <button class="btn" id="navNext" ${cur===steps.length-1?"disabled":""}>Siguiente »</button>
+  </div>`;
+}
+function wireNav(){
+  document.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>{ borrador.pasoActual=+b.dataset.goto; saveBorrador(); render(); });
+  const prev=document.getElementById("navPrev"), next=document.getElementById("navNext"), home=document.getElementById("navHome");
+  if(prev) prev.onclick=()=>{ if(borrador.pasoActual>0){borrador.pasoActual--; saveBorrador(); render();} };
+  if(next) next.onclick=()=>{ if(borrador.pasoActual<stepDefs().length-1){borrador.pasoActual++; saveBorrador(); render();} };
+  if(home) home.onclick=()=>{ vista="inicio"; render(); };
+  const chip=document.getElementById("chipPend"); if(chip) chip.onclick=mostrarPendientes;
+}
+function mostrarPendientes(){
+  const pe=pendientesEsenciales();
+  const steps=stepDefs();
+  const pasoDeCampo=(c)=>{
+    if(["nombreObra","comuna","codigoManager"].includes(c)) return 0;
+    if(["fechaActaTerreno","fechaInicioFisico","plazoDias","fechaTermino"].includes(c)) return 1;
+    if(["tipologias","bodegaRC","totalGrupo"].includes(c)) return 2;
+    return 0;
+  };
+  let html=`<h3>Pendientes</h3>`;
+  if(pe.length===0) html+=`<p>No hay campos esenciales pendientes. ✓</p>`;
+  else{
+    html+=`<p class="sub">Campos esenciales vacíos (saldrán como <span style="color:var(--rojo);font-weight:700">[PENDIENTE]</span> en el correo):</p><ul>`;
+    pe.forEach(c=>{ html+=`<li><a class="goto-pend" data-p="${pasoDeCampo(c)}" style="cursor:pointer;color:var(--verde-osc);text-decoration:underline">${esc(LBL[c])}</a></li>`; });
+    html+=`</ul>`;
+  }
+  html+=`<p class="hint">Las preguntas anexas sin responder (${pendientesAnexas()}) simplemente se omiten del correo.</p>`;
+  modal(html);
+  document.querySelectorAll(".goto-pend").forEach(a=>a.onclick=()=>{ cerrarModal(); borrador.pasoActual=+a.dataset.p; saveBorrador(); render(); });
+}
+
+/* ---------- input helper ---------- */
+function campo(id, label, tipo, extra){
+  const v=borrador.esenciales[id]; const val=v==null?"":v;
+  extra=extra||"";
+  if(tipo==="textarea") return `<label for="f_${id}">${label}</label><textarea id="f_${id}" data-campo="${id}" ${extra}>${esc(val)}</textarea>`;
+  return `<label for="f_${id}">${label}</label><input id="f_${id}" data-campo="${id}" type="${tipo}" value="${esc(val)}" ${extra}>`;
+}
+function wireCampos(){
+  document.querySelectorAll("[data-campo]").forEach(el=>{
+    el.addEventListener("input",()=>{
+      let v=el.value;
+      if(el.dataset.campo==="plazoDias") v=(v===""?null:v);
+      borrador.esenciales[el.dataset.campo]=v;
+      saveBorrador();
+      onCampoChange(el.dataset.campo);
+    });
+  });
+}
+function onCampoChange(campo){
+  // recalcular término / asunto / header en vivo según el paso
+  if(campo==="nombreObra"){ actualizarHeader(); const a=document.getElementById("asuntoLive"); if(a) a.textContent=generarAsunto(); }
+  if(["comuna","codigoManager"].includes(campo)){ const a=document.getElementById("asuntoLive"); if(a) a.textContent=generarAsunto(); }
+  if(["fechaInicioFisico","plazoDias"].includes(campo)){
+    const ft=document.getElementById("f_fechaTermino");
+    if(ft && !borrador.esenciales._terminoEditado){
+      const calc=addDias(borrador.esenciales.fechaInicioFisico, borrador.esenciales.plazoDias);
+      borrador.esenciales.fechaTermino=calc; ft.value=calc; saveBorrador();
+    }
+    const tc=document.getElementById("terminoCalc"); if(tc) tc.textContent=fechaTerminoEfectiva();
+  }
+}
+
+/* ---------- Render del wizard ---------- */
+function renderWizard(){
+  const steps=stepDefs(); const cur=borrador.pasoActual; const s=steps[cur];
+  let cuerpo="";
+  if(s.key==="identificacion") cuerpo=stepIdentificacion();
+  else if(s.key==="fechas") cuerpo=stepFechas();
+  else if(s.key==="alcance") cuerpo=stepAlcance();
+  else if(s.key==="responsables") cuerpo=stepResponsables();
+  else if(s.key==="cronograma") cuerpo=stepCronograma();
+  else if(s.key==="revision") cuerpo=stepRevision();
+  else if(s.areaId) cuerpo=stepArea(s.areaId);
+
+  app().innerHTML=`<div class="card">${barraPasos()}${cuerpo}${navInferior()}</div>`;
+  wireNav(); wireCampos();
+  if(s.key==="identificacion") wireEmpresa();
+  if(s.key==="fechas") wireTermino();
+  if(s.areaId) wireArea(s.areaId);
+  if(s.key==="revision") wireRevision();
+}
+
+function stepIdentificacion(){
+  const opts=config.empresas.map(e=>`<option value="${esc(e)}" ${borrador.esenciales.empresa===e?"selected":""}>${esc(e)}</option>`).join("");
+  return `<h2>1 · Identificación</h2><p class="sub">Datos base de la obra.</p>
+    <label for="f_empresa">Empresa</label>
+    <select id="f_empresa">${`<option value="">— Selecciona —</option>`+opts}</select>
+    ${campo("nombreObra","Nombre de la obra","text",'placeholder="Ej: Ñuke Mapu 17-2025"')}
+    ${campo("comuna","Comuna","text")}
+    ${campo("codigoManager","Código Manager","text")}
+    <div class="asunto-prev"><b>Asunto generado:</b><br><span id="asuntoLive">${esc(generarAsunto())}</span></div>`;
+}
+function wireEmpresa(){
+  const sel=document.getElementById("f_empresa");
+  sel.onchange=()=>{ borrador.esenciales.empresa=sel.value; saveBorrador(); };
+}
+function stepFechas(){
+  return `<h2>2 · Fechas y plazos</h2><p class="sub">La fecha de término se autocalcula (inicio + plazo) y queda editable.</p>
+    <div class="grid2">
+      <div>${campo("fechaActaTerreno","Fecha acta de entrega de terreno","date")}</div>
+      <div>${campo("fechaInicioFisico","Fecha inicio físico","date")}</div>
+    </div>
+    <div class="grid2">
+      <div>${campo("plazoDias","Plazo en días","number",'min="0"')}</div>
+      <div>${campo("fechaTermino","Fecha de término (editable)","date")}</div>
+    </div>
+    <p class="hint">Término efectivo en el correo: <b id="terminoCalc">${esc(fechaTerminoEfectiva())}</b></p>`;
+}
+function wireTermino(){
+  const ft=document.getElementById("f_fechaTermino");
+  ft.addEventListener("input",()=>{ borrador.esenciales._terminoEditado=true; });
+}
+function stepAlcance(){
+  return `<h2>3 · Alcance</h2><p class="sub">Tipologías, bodega y tamaño del grupo.</p>
+    ${campo("tipologias","Tipologías","text",'placeholder="Ej: 2 tipologías 54 m² y 60 m²"')}
+    ${campo("bodegaRC","Bodega / RC","text")}
+    ${campo("totalGrupo","Total del grupo","text",'placeholder="Ej: 48 viviendas"')}`;
+}
+function stepResponsables(){
+  return `<h2>4 · Responsables</h2><p class="sub">Equipo a cargo en terreno.</p>
+    <div class="grid2">
+      <div>${campo("residente","Residente de obra","text")}</div>
+      <div>${campo("autocontrol","Autocontrol","text")}</div>
+      <div>${campo("capataz","Capataz en terreno","text")}</div>
+      <div>${campo("asistenteSocial","Asistente Social","text")}</div>
+      <div>${campo("fto","FTO","text")}</div>
+      <div>${campo("sat","SAT","text")}</div>
+    </div>`;
+}
+function stepCronograma(){
+  return `<h2>5 · Cronograma</h2><p class="sub">Enlace a la Carta Gantt / plan de trabajo.</p>
+    ${campo("linkGantt","Link a Carta Gantt","url",'placeholder="https://..."')}`;
+}
+
+/* ---------- Paso de Área ---------- */
+function stepArea(areaId){
+  const area=config.areas.find(a=>a.id===areaId);
+  const idx=config.areas.findIndex(a=>a.id===areaId)+6;
+  const fijas=config.tematicas.filter(t=>t.areaId===areaId&&t.tipo==="fija"&&t.activa).sort((a,b)=>a.orden-b.orden);
+  const anexas=config.tematicas.filter(t=>t.areaId===areaId&&t.tipo==="anexa"&&t.activa).sort((a,b)=>a.orden-b.orden);
+  let html=`<h2>${idx} · ${esc(area.nombre)}</h2><p class="sub">Lineamientos estándar y consultas específicas de esta obra.</p>`;
+  html+=`<h3>Lineamientos estándar</h3>`;
+  if(fijas.length===0) html+=`<p class="hint">No hay líneas fijas activas para esta área.</p>`;
+  else fijas.forEach(t=>{
+    const inc=borrador.fijasIncluidas[t.id]!==false;
+    html+=`<div class="fija"><input type="checkbox" id="fx_${t.id}" data-fija="${t.id}" ${inc?"checked":""}>
+      <label for="fx_${t.id}">${esc(t.texto)}</label></div>`;
+  });
+  html+=`<h3>Consultas específicas de esta obra</h3>`;
+  if(anexas.length===0) html+=`<p class="hint">No hay preguntas anexas activas para esta área.</p>`;
+  else anexas.forEach(t=>{
+    const a=borrador.anexas[t.id]||{respuesta:null,detalle:""};
+    const r=a.respuesta;
+    html+=`<div class="tarjeta-anexa">
+      <div class="preg">${esc(t.pregunta)}</div>
+      <div class="opts" data-anexa="${t.id}">
+        <button class="si ${r==="si"?"on":""}" data-r="si">Sí</button>
+        <button class="no ${r==="no"?"on":""}" data-r="no">No</button>
+        <button class="na ${r==="na"?"on":""}" data-r="na">No aplica</button>
+      </div>
+      <div class="anexa-detalle" id="det_${t.id}" style="${r==="si"?"":"display:none"}">
+        <textarea data-detalle="${t.id}" placeholder="Detalle…">${esc(a.detalle||"")}</textarea>
+        <div class="placeholder-ej"><b>Ejemplo:</b> ${esc(t.placeholder||"")}</div>
+      </div>
+    </div>`;
+  });
+  return html;
+}
+function wireArea(areaId){
+  document.querySelectorAll("[data-fija]").forEach(cb=>{
+    cb.onchange=()=>{ borrador.fijasIncluidas[cb.dataset.fija]=cb.checked; saveBorrador(); };
+  });
+  document.querySelectorAll("[data-anexa]").forEach(grp=>{
+    const id=grp.dataset.anexa;
+    grp.querySelectorAll("button").forEach(b=>{
+      b.onclick=()=>{
+        const a=borrador.anexas[id]||{respuesta:null,detalle:""};
+        a.respuesta=b.dataset.r; borrador.anexas[id]=a; saveBorrador();
+        grp.querySelectorAll("button").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+        const det=document.getElementById("det_"+id); det.style.display=(b.dataset.r==="si")?"":"none";
+      };
+    });
+  });
+  document.querySelectorAll("[data-detalle]").forEach(ta=>{
+    ta.addEventListener("input",()=>{
+      const id=ta.dataset.detalle; const a=borrador.anexas[id]||{respuesta:"si",detalle:""};
+      a.detalle=ta.value; borrador.anexas[id]=a; saveBorrador();
+    });
+  });
+}
+
+/* ---------- Paso final — Revisión ---------- */
+function stepRevision(){
+  const pe=pendientesEsenciales();
+  const asunto=generarAsunto(), para=generarDestinatarios(), cuerpo=generarCuerpo();
+  let html=`<h2>Revisión y generación</h2><p class="sub">Vista previa del correo. Copia cada bloque y pégalo en Gmail.</p>`;
+  if(pe.length){
+    html+=`<div class="resumen-pend"><b>⚠ ${pe.length} campo(s) esencial(es) pendiente(s):</b><br>`;
+    html+=pe.map((c,i)=>`<a class="rev-goto" data-c="${c}">${esc(LBL[c])}</a>`).join(" · ");
+    html+=`</div>`;
+  }
+  html+=`<h3>Vista previa</h3><pre class="preview">${previewHTML("ASUNTO:\n"+asunto+"\n\nCUERPO:\n"+cuerpo)}</pre>`;
+  html+=`<h3>Bloques copiables</h3>`;
+  html+=bloqueCopia("PARA (destinatarios)", para||"(sin destinatarios — elige empresa en paso 1)", "para");
+  html+=bloqueCopia("ASUNTO", asunto, "asunto");
+  html+=bloqueCopia("CUERPO", cuerpo, "cuerpo");
+  html+=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn" id="copiarTodo">⧉ Copiar todo</button>
+      <button class="btn peligro" id="finalizar">✓ Finalizar y limpiar borrador</button>
+    </div>`;
+  return html;
+}
+function bloqueCopia(titulo, texto, key){
+  return `<div class="bloque-copia">
+    <div class="bc-head"><span>${esc(titulo)}</span>
+      <button class="btn sec sm" data-copiar="${key}">⧉ Copiar</button></div>
+    <div class="bc-body"><pre class="preview" style="border:none;padding:0;background:none">${previewHTML(texto)}</pre></div>
+  </div>`;
+}
+function wireRevision(){
+  const asunto=generarAsunto(), para=generarDestinatarios(), cuerpo=generarCuerpo();
+  const map={para, asunto, cuerpo};
+  document.querySelectorAll("[data-copiar]").forEach(b=>{
+    b.onclick=()=>copiar(map[b.dataset.copiar], b.dataset.copiar.toUpperCase());
+  });
+  document.querySelectorAll(".rev-goto").forEach(a=>{
+    a.onclick=()=>{ const c=a.dataset.c;
+      const p=["nombreObra","comuna","codigoManager"].includes(c)?0:["fechaActaTerreno","fechaInicioFisico","plazoDias"].includes(c)?1:2;
+      borrador.pasoActual=p; saveBorrador(); render();
+    };
+  });
+  document.getElementById("copiarTodo").onclick=()=>{
+    const todo=`PARA:\n${para}\n\nASUNTO:\n${asunto}\n\nCUERPO:\n${cuerpo}`;
+    copiar(todo,"Correo completo");
+  };
+  document.getElementById("finalizar").onclick=()=>{
+    if(!confirm("¿Finalizar y limpiar el borrador? Esto reinicia el asistente.")) return;
+    localStorage.removeItem(K_BORRADOR); borrador=defaultBorrador(); vista="inicio"; render(); toast("Borrador finalizado ✓");
+  };
+}
+
+/* ============================================================= *
+ *  CONFIGURACIÓN
+ * ============================================================= */
+function renderConfig(){
+  app().innerHTML=`<div class="card">
+    <h2>⚙ Configuración</h2><p class="sub">Mejora el formato tipo sin tocar código. Los cambios afectan los próximos correos.</p>
+    <div class="tabs">
+      <button data-tab="tematicas" class="${configTab==="tematicas"?"on":""}">Temáticas</button>
+      <button data-tab="destinatarios" class="${configTab==="destinatarios"?"on":""}">Destinatarios</button>
+      <button data-tab="respaldo" class="${configTab==="respaldo"?"on":""}">Respaldo</button>
+    </div>
+    <div id="configBody"></div>
+    <div class="nav"><button class="btn gris" id="cfgHome">🏠 Volver al inicio</button></div>
+  </div>`;
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{ configTab=b.dataset.tab; render(); });
+  document.getElementById("cfgHome").onclick=()=>{ vista="inicio"; render(); };
+  if(configTab==="tematicas") renderCfgTematicas();
+  else if(configTab==="destinatarios") renderCfgDestinatarios();
+  else renderCfgRespaldo();
+}
+
+/* ---- 7.1 Temáticas ---- */
+function renderCfgTematicas(){
+  const body=document.getElementById("configBody");
+  let html=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn sm" id="addTem">＋ Agregar temática</button>
+    <button class="btn sec sm" id="addArea">＋ Agregar área</button></div>`;
+  config.areas.forEach(area=>{
+    const tems=config.tematicas.filter(t=>t.areaId===area.id).sort((a,b)=>a.orden-b.orden);
+    html+=`<div class="area-grupo"><div class="ag-head"><span>${esc(area.nombre)}</span>
+      <span class="acc">
+        <button class="iconbtn" data-renarea="${area.id}" title="Renombrar área">✎</button>
+        <button class="iconbtn del" data-delarea="${area.id}" title="Eliminar área">🗑</button>
+      </span></div>`;
+    if(tems.length===0) html+=`<div class="tem-fila"><span class="hint">Sin temáticas.</span></div>`;
+    tems.forEach((t,i)=>{
+      const txt = t.tipo==="fija" ? t.texto : t.pregunta;
+      html+=`<div class="tem-fila ${t.activa?"":"inactiva"}">
+        <span class="badge ${t.tipo}">${t.tipo.toUpperCase()}</span>
+        <span class="tem-txt">${esc(txt)}</span>
+        <span class="acc">
+          <button class="iconbtn" data-up="${t.id}" ${i===0?"disabled":""} title="Subir">▲</button>
+          <button class="iconbtn" data-down="${t.id}" ${i===tems.length-1?"disabled":""} title="Bajar">▼</button>
+          <label class="switch"><input type="checkbox" data-act="${t.id}" ${t.activa?"checked":""}><span class="slider"></span></label>
+          <button class="iconbtn" data-edit="${t.id}" title="Editar">✎</button>
+          <button class="iconbtn del" data-deltem="${t.id}" title="Eliminar">🗑</button>
+        </span></div>`;
+    });
+    html+=`</div>`;
+  });
+  body.innerHTML=html;
+  document.getElementById("addTem").onclick=()=>formTematica(null);
+  document.getElementById("addArea").onclick=()=>formArea();
+  body.querySelectorAll("[data-act]").forEach(cb=>cb.onchange=()=>{ const t=findTem(cb.dataset.act); t.activa=cb.checked; saveConfig(); render(); });
+  body.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>formTematica(b.dataset.edit));
+  body.querySelectorAll("[data-deltem]").forEach(b=>b.onclick=()=>{ if(confirm("¿Eliminar esta temática?")){ config.tematicas=config.tematicas.filter(x=>x.id!==b.dataset.deltem); saveConfig(); render(); } });
+  body.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>moverTem(b.dataset.up,-1));
+  body.querySelectorAll("[data-down]").forEach(b=>b.onclick=()=>moverTem(b.dataset.down,1));
+  body.querySelectorAll("[data-renarea]").forEach(b=>b.onclick=()=>renombrarArea(b.dataset.renarea));
+  body.querySelectorAll("[data-delarea]").forEach(b=>b.onclick=()=>eliminarArea(b.dataset.delarea));
+}
+function findTem(id){ return config.tematicas.find(t=>t.id===id); }
+function moverTem(id, dir){
+  const t=findTem(id);
+  const grupo=config.tematicas.filter(x=>x.areaId===t.areaId).sort((a,b)=>a.orden-b.orden);
+  const i=grupo.findIndex(x=>x.id===id); const j=i+dir;
+  if(j<0||j>=grupo.length) return;
+  const a=grupo[i], b=grupo[j]; const tmp=a.orden; a.orden=b.orden; b.orden=tmp;
+  saveConfig(); render();
+}
+function formTematica(id){
+  const t=id?findTem(id):null;
+  const areaOpts=config.areas.map(a=>`<option value="${a.id}" ${t&&t.areaId===a.id?"selected":""}>${esc(a.nombre)}</option>`).join("");
+  const tipo=t?t.tipo:"fija";
+  const html=`<h3>${t?"Editar":"Agregar"} temática</h3>
+    <label>Área</label><select id="mf_area">${areaOpts}</select>
+    <label>Tipo</label><select id="mf_tipo">
+      <option value="fija" ${tipo==="fija"?"selected":""}>Fija (línea estándar siempre incluida)</option>
+      <option value="anexa" ${tipo==="anexa"?"selected":""}>Anexa (pregunta Sí/No/No aplica)</option>
+    </select>
+    <div id="mf_fija" style="${tipo==="fija"?"":"display:none"}">
+      <label>Texto de la línea fija</label><textarea id="mf_texto">${esc(t&&t.texto||"")}</textarea>
+    </div>
+    <div id="mf_anexa" style="${tipo==="anexa"?"":"display:none"}">
+      <label>Pregunta</label><textarea id="mf_preg">${esc(t&&t.pregunta||"")}</textarea>
+      <label>Placeholder de ejemplo</label><textarea id="mf_ph">${esc(t&&t.placeholder||"")}</textarea>
+    </div>`;
+  modal(html, ()=>{
+    const tipoV=document.getElementById("mf_tipo").value;
+    const areaV=document.getElementById("mf_area").value;
+    const obj=t||{id:uid(),activa:true,orden:(Math.max(0,...config.tematicas.filter(x=>x.areaId===areaV).map(x=>x.orden))+1)};
+    obj.areaId=areaV; obj.tipo=tipoV;
+    if(tipoV==="fija"){ obj.texto=document.getElementById("mf_texto").value.trim(); delete obj.pregunta; delete obj.placeholder; }
+    else { obj.pregunta=document.getElementById("mf_preg").value.trim(); obj.placeholder=document.getElementById("mf_ph").value.trim(); delete obj.texto; }
+    if(!t) config.tematicas.push(obj);
+    saveConfig(); render(); toast("Temática guardada ✓"); return true;
+  });
+  const selTipo=document.getElementById("mf_tipo");
+  selTipo.onchange=()=>{ document.getElementById("mf_fija").style.display=selTipo.value==="fija"?"":"none";
+    document.getElementById("mf_anexa").style.display=selTipo.value==="anexa"?"":"none"; };
+}
+function formArea(){
+  modal(`<h3>Agregar área</h3><label>Nombre del área</label><input type="text" id="mf_an" placeholder="Ej: Calidad">`, ()=>{
+    const n=document.getElementById("mf_an").value.trim(); if(!n){toast("Escribe un nombre");return false;}
+    let base=n.toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,12)||"area"; let aid=base, k=1;
+    while(config.areas.some(a=>a.id===aid)) aid=base+(k++);
+    config.areas.push({id:aid,nombre:n}); saveConfig(); render(); toast("Área agregada ✓"); return true;
+  });
+}
+function renombrarArea(areaId){
+  const area=config.areas.find(a=>a.id===areaId);
+  modal(`<h3>Renombrar área</h3><label>Nombre</label><input type="text" id="mf_rn" value="${esc(area.nombre)}">`, ()=>{
+    const n=document.getElementById("mf_rn").value.trim(); if(!n) return false;
+    area.nombre=n; saveConfig(); render(); toast("Área renombrada ✓"); return true;
+  });
+}
+function eliminarArea(areaId){
+  const n=config.tematicas.filter(t=>t.areaId===areaId).length;
+  if(!confirm(`¿Eliminar el área y sus ${n} temática(s)?`)) return;
+  config.areas=config.areas.filter(a=>a.id!==areaId);
+  config.tematicas=config.tematicas.filter(t=>t.areaId!==areaId);
+  saveConfig(); render(); toast("Área eliminada");
+}
+
+/* ---- 7.2 Destinatarios ---- */
+function renderCfgDestinatarios(){
+  const body=document.getElementById("configBody");
+  let html=`<p class="sub">Un correo por línea. Se valida el formato visualmente.</p>`;
+  config.empresas.forEach(emp=>{
+    const lista=(config.destinatarios[emp]||[]).join("\n");
+    html+=`<label>${esc(emp)}</label><textarea data-dest="${esc(emp)}" rows="8">${esc(lista)}</textarea>
+      <div class="email-invalido" data-inv="${esc(emp)}"></div>`;
+  });
+  html+=`<button class="btn sm" id="guardarDest" style="margin-top:12px">Guardar destinatarios</button>`;
+  body.innerHTML=html;
+  const validar=()=>{
+    body.querySelectorAll("[data-dest]").forEach(ta=>{
+      const malos=ta.value.split("\n").map(s=>s.trim()).filter(s=>s&&!emailValido(s));
+      const inv=body.querySelector(`[data-inv="${CSS.escape(ta.dataset.dest)}"]`);
+      inv.textContent=malos.length?`⚠ ${malos.length} con formato dudoso: ${malos.slice(0,3).join(", ")}${malos.length>3?"…":""}`:"";
+    });
+  };
+  body.querySelectorAll("[data-dest]").forEach(ta=>ta.addEventListener("input",validar));
+  validar();
+  document.getElementById("guardarDest").onclick=()=>{
+    body.querySelectorAll("[data-dest]").forEach(ta=>{
+      config.destinatarios[ta.dataset.dest]=ta.value.split("\n").map(s=>s.trim()).filter(Boolean);
+    });
+    saveConfig(); toast("Destinatarios guardados ✓");
+  };
+}
+
+/* ---- 7.3 Respaldo ---- */
+function renderCfgRespaldo(){
+  const body=document.getElementById("configBody");
+  body.innerHTML=`<p class="sub">Respalda o comparte tu configuración entre computadores.</p>
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:420px">
+      <button class="btn" id="expCfg">⬇ Exportar configuración (JSON)</button>
+      <button class="btn sec" id="impCfg">⬆ Importar configuración…</button>
+      <input type="file" id="impFile" accept="application/json" style="display:none">
+      <button class="btn peligro" id="resetCfg">↺ Restaurar valores de fábrica</button>
+    </div>`;
+  document.getElementById("expCfg").onclick=()=>{
+    const blob=new Blob([JSON.stringify(config,null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="config_inicio_obras.json"; a.click();
+    URL.revokeObjectURL(a.href); toast("Configuración exportada ✓");
+  };
+  document.getElementById("impCfg").onclick=()=>document.getElementById("impFile").click();
+  document.getElementById("impFile").onchange=(ev)=>{
+    const f=ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const c=JSON.parse(r.result);
+        if(!c.version){ toast("Archivo inválido (sin version)"); return; }
+        if(!confirm("¿Reemplazar la configuración actual por la del archivo?")) return;
+        saveConfig(c); render(); toast("Configuración importada ✓");
+      }catch(e){ toast("No se pudo leer el JSON"); }
+    };
+    r.readAsText(f); ev.target.value="";
+  };
+  document.getElementById("resetCfg").onclick=()=>{
+    if(!confirm("¿Restaurar la configuración de fábrica? Se perderán tus cambios de temáticas y destinatarios.")) return;
+    saveConfig(defaultConfig()); render(); toast("Configuración restaurada");
+  };
+}
+
+/* ============================================================= *
+ *  MODAL
+ * ============================================================= */
+let modalOnOk=null;
+function modal(html, onOk){
+  modalOnOk=onOk||null;
+  const bg=document.createElement("div"); bg.className="modal-bg"; bg.id="modalBg";
+  bg.innerHTML=`<div class="modal">${html}<div class="modal-acc">
+    <button class="btn gris" id="modalCancel">Cancelar</button>
+    ${onOk?`<button class="btn" id="modalOk">Guardar</button>`:`<button class="btn" id="modalOk">Cerrar</button>`}
+  </div></div>`;
+  document.body.appendChild(bg);
+  document.getElementById("modalCancel").onclick=cerrarModal;
+  document.getElementById("modalOk").onclick=()=>{ if(modalOnOk){ if(modalOnOk()!==false) cerrarModal(); } else cerrarModal(); };
+  bg.onclick=(e)=>{ if(e.target===bg) cerrarModal(); };
+}
+function cerrarModal(){ const bg=document.getElementById("modalBg"); if(bg) bg.remove(); modalOnOk=null; }
+
+/* ============================================================= *
+ *  INIT
+ * ============================================================= */
+document.getElementById("btnHomeHeader").onclick=()=>{ vista="inicio"; render(); };
+document.getElementById("btnConfigHeader").onclick=()=>{ vista="config"; configTab="tematicas"; render(); };
+
+config=loadConfig();
+borrador=loadBorrador();
+render();
+</script>
+</body>
+</html>
