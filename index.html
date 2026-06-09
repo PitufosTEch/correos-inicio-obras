@@ -207,9 +207,10 @@ function defaultConfig(){
     version:1,
     empresas:["Constructora Raíces","ATPK","Atipika"],
     destinatarios:{
+      // Cuentas fusionadas: todas las empresas usan los mismos correos @scraices.cl
       "Constructora Raíces": baseDestinatarios("rrhh@scraices.cl"),
-      "ATPK": baseDestinatarios("rrhh@atpk.cl"),
-      "Atipika": baseDestinatarios("rrhh@atipika.cl")
+      "ATPK": baseDestinatarios("rrhh@scraices.cl"),
+      "Atipika": baseDestinatarios("rrhh@scraices.cl")
     },
     areas:[
       {id:"autocontrol", nombre:"Autocontrol / Residente"},
